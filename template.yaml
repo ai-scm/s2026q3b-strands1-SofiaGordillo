@@ -1,0 +1,45 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Strands Travel Agent Lambda Function
+
+Globals:
+  Function:
+    Timeout: 300
+    MemorySize: 512
+    Runtime: python3.14
+
+Parameters:
+  KnowledgeBaseId:
+    Type: String
+    Description: Amazon Bedrock Knowledge Base ID
+    Default: "FDCYSFLFCG"  # Replace with your actual Knowledge Base ID
+
+Resources:
+  StrandsTravelAgentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: lambda_function.handler
+      Environment:
+        Variables:
+          SESSIONS_TABLE: !Ref SessionsTable
+          KNOWLEDGE_BASE_ID: !Ref KnowledgeBaseId
+      Policies:
+        - AmazonBedrockFullAccess
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+        - S3ReadPolicy:
+            BucketName: "*"
+
+  SessionsTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: agent-sessions
+      PrimaryKey:
+        Name: sessionId
+        Type: String
+
+Outputs:
+  StrandsTravelAgentFunction:
+    Description: "Strands Travel Agent Lambda Function ARN"
+    Value: !GetAtt StrandsTravelAgentFunction.Arn
